@@ -27,7 +27,6 @@ function generateRedirectionURL() {
  */
 function getAccessToken(code,type="authorization_code") {
     return new Promise((resolve,reject)=>{
-        console.log("Fetching AccessToken ("+type+")");
         request({
             method: 'POST',
             uri: "https://accounts.spotify.com/api/token",
@@ -45,7 +44,6 @@ function getAccessToken(code,type="authorization_code") {
                     refreshToken    = type==="authorization_code"?body.refresh_token:code,
                     expiresIn       = typeof body.expires_in !== "undefined"?(Date.now()+(body.expires_in*1000)):(Date.now(3600*1000));
 
-                console.log("Received AccessToken");
                 return resolve([accessToken,refreshToken,expiresIn]);
             } catch(e) {
                 return reject(errorCodes.ERROR);
@@ -64,7 +62,6 @@ function getAccessToken(code,type="authorization_code") {
  */
 function updateUserData(userid, accessToken, refreshToken, expiresIn) {
     return new Promise((resolve,reject)=>{
-        console.log("Updating UserData");
         accountService.getUserByUserid(userid)
             .then(()=>database.deleteOne("spotify_client",{userid:parseInt(userid)},()=>database.insertOne("spotify_client",{userid:parseInt(userid),access_token:accessToken,expires_in:expiresIn,refresh_token:refreshToken},(error)=>error?reject(errorCodes.ERROR):resolve([accessToken,refreshToken]))));
     });
@@ -80,7 +77,6 @@ function refreshClient(userid) {
         database.findOne("spotify_client",{userid:parseInt(userid)},(error,spotifyClient)=>{
             if(error) return reject(errorCodes.SPOTIFY_NOT_CONNECTED);
             if(spotifyClient.expires_in+10000 > Date.now()) return resolve(spotifyClient);
-            console.log("Refreshing Client");
             getAccessToken(spotifyClient.refresh_token,"refresh_token")
                 .then((data)=>updateUserData(userid,data[0],data[1],data[2]))
                 .then(()=>database.findOne("spotify_client",{userid:parseInt(userid)},(error,spotifyClient)=>error?reject(errorCodes.SPOTIFY_NOT_CONNECTED):resolve(spotifyClient)))
@@ -103,8 +99,6 @@ function getSpotifyUserData(userid) {
                 redirectUri:  config.services.spotify.redirect_uri
             });
 
-            console.log("Parsing Spotify UserData");
-
             apiClient.setAccessToken(spotifyClient.access_token);
             apiClient.setRefreshToken(spotifyClient.refresh_token);
             apiClient.getMyCurrentPlayingTrack()
@@ -121,7 +115,7 @@ function getSpotifyUserData(userid) {
                     } else {
                         let track = "-";
                         apiClient.getMe()
-                            .then((userData)=>resolve({authenticated_user: userData.display_name,current_track:track.name,mood_color_rgb:{red:255,green:255,blue:255},mood_color_hex:"#ffffff",happyness:0.0}))
+                            .then((userData)=>resolve({authenticated_user: userData.display_name,current_track:track.name,mood_color_rgb:{red:255,green:255,blue:255},mood_color_hex:"#ffffff",happyness:0.0, energy: 0.0}))
                             .catch((error)=>reject(error));
                     }
                 })

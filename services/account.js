@@ -217,7 +217,6 @@ function validateEmail(_email) {
     const email = _email.toLowerCase().replace("googlemail","gmail");
     return new Promise((resolve,reject)=>{
         if(!validateEmailFormat(email)) return reject(errorCodes.EMAIL_INVALID);
-        database.find("account",{},(error,data)=>console.log(data));
         database.count("account",{email:email},(_,count)=>{
             if(count>0) return reject(errorCodes.EMAIL_IN_USE);
             return resolve(email);
@@ -408,7 +407,7 @@ function updateAmbientoSettings(userid,data) {
         getUserByUserid(userid)
             .then(()=>{
                 let toUpdate = {};
-                if(typeof data.type === "undefined")
+                if(typeof data.type !== "undefined")
                     switch (toUpdate) {
                         case "permanent":
                             toUpdate.lightType = "permanent";
@@ -423,8 +422,8 @@ function updateAmbientoSettings(userid,data) {
                             toUpdate.lightType = "permanent";
                             break;
                     }
-                if(typeof data.enabled === "undefined") toUpdate.enabled = data.enabled.toString() === "true";
-                if(typeof data.brightness === "undefined") {
+                if(typeof data.enabled !== "undefined") toUpdate.enabled = data.enabled.toString() === "true";
+                if(typeof data.brightness !== "undefined") {
                     toUpdate.brightness = data.brightness;
                     if(toUpdate.brightness<0) toUpdate.brightness = 0;
                     else if(toUpdate.brightness>1) toUpdate.brightness = 1;
@@ -441,7 +440,7 @@ function updateAmbientoSettings(userid,data) {
  */
 function getAmbientoSettings(userid) {
     return new Promise((resolve,reject)=>{
-        getUserByUserid(userid)
+        getUserByUserid(userid,["lightType","enabled","brightness"])
             .then((userData)=>{
                 let result = {
                     type: "permanent",
@@ -449,9 +448,9 @@ function getAmbientoSettings(userid) {
                     brightness: 1.0
                 };
 
-                if(typeof userData.lightType !== "undefined") result.type = userData.lightType;
-                if(typeof userData.enabled !== "undefined") result.enabled = userData.enabled;
-                if(typeof userData.brightness !== "undefined") result.brightness = userData.brightness;
+                if(typeof userData.lightType !== "undefined" && userData.lightType !== null) result.type = userData.lightType;
+                if(typeof userData.enabled !== "undefined" && userData.enabled !== null) result.enabled = userData.enabled;
+                if(typeof userData.brightness !== "undefined" && userData.brightness !== null) result.brightness = userData.brightness;
 
                 return resolve(result);
             }).catch(reject);
