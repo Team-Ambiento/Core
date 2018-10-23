@@ -144,7 +144,7 @@ To update settings with your authenticated user perform this request
 | ------------- | ------------- | ------------- | ------------- |
 | type  | permanent / blinking / rainbow | Type of lightning  | Yes |
 | enabled  | true / false  | Enable Ambiento feedback | Yes |
-' brightness | 0.0 - 1.0 | Set brightness of Ambiento devices | Yes |
+| brightness | 0.0 - 1.0 | Set brightness of Ambiento devices | Yes |
 
 
 > YOUR_APPLICATION_URL/update?token=YOUR_TOKEN Body (urlencoded): {type: type, enabled: enabled, brightness: brightness}
